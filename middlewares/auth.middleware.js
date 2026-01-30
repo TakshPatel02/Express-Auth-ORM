@@ -4,10 +4,10 @@ import { eq } from 'drizzle-orm';
 
 const auth = async (req, res, next) => {
     try {
-        const sessionId = req.headers['session-id'];
+        const sessionId = req.cookies.sessionId;
 
         if (!sessionId) {
-            return next();
+            return res.status(401).json({ message: "Not authenticated" });
         }
 
         const [session] = await db.select({
@@ -18,7 +18,7 @@ const auth = async (req, res, next) => {
         }).from(userSessions).rightJoin(users, eq(users.id, userSessions.userId)).where(eq(userSessions.id, sessionId));
 
         if (!session) {
-            return next();
+            return res.status(401).json({ message: "Invalid session" });
         }
 
         req.user = session;

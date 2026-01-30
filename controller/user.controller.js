@@ -52,11 +52,20 @@ const signup = async (req, res) => {
             salt
         }).returning({ id: users.id });
 
+        const [sessions] = await db.insert(userSessions).values({
+            userId: newUser.id
+        }).returning({ id: userSessions.id });
+
+        // setting the session id in cookie while signing up
+        res.cookie("sessionId", sessions.id, {
+            httpOnly: true,
+            sameSite: 'lax'
+        })
+
         return res.status(201).json({
             success: true,
             data: {
                 message: "User registered successfully",
-                userId: newUser.id
             }
         })
 
@@ -95,9 +104,15 @@ const login = async (req, res) => {
             userId: user.id
         }).returning({ id: userSessions.id });
 
+        // setting the session id in cookie while logging in
+        res.cookie("sessionId", sessions.id, {
+            httpOnly: true,
+            sameSite: 'lax'
+        })
+
         return res.status(200).json({
             success: true,
-            message: `session created with id: ${sessions.id}`
+            message: `Logged in successfully`
         });
 
     } catch (err) {
@@ -140,7 +155,7 @@ const updateUserData = async (req, res) => {
 
 const logout = async (req, res) => {
     try {
-        const sessionId = req.headers['session-id'];
+        const sessionId = req.cookies.sessionId;
 
         if (!sessionId) {
             return res.status(400).json({
@@ -158,6 +173,7 @@ const logout = async (req, res) => {
             });
         }
 
+        res.clearCookie("sessionId");
         return res.status(200).json({
             success: true,
             message: "Logged out successfully"

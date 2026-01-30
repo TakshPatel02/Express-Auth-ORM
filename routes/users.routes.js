@@ -1,11 +1,12 @@
 import express from 'express';
 import { signup, login, getUserData, updateUserData, logout } from '../controller/user.controller.js'
+import auth from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-router.get('/', getUserData); // current user info route
+router.get('/me', auth, getUserData); // current user info route
 
-router.patch('/', updateUserData); // update user info route
+router.patch('/', auth, updateUserData); // update user info route
 
 router.post('/signup', signup); // user registration route
 
